@@ -54,6 +54,9 @@ export class CoaidInfraStack extends cdk.Stack {
       }
     })
 
+    // Give Lambda FullAccess Role
+    this.donationsTable.grantFullAccess(this.insertDonationLambda);
+
   }
 
   createDynamoDBTables(): void {
@@ -66,9 +69,6 @@ export class CoaidInfraStack extends cdk.Stack {
         type: dynamodb.AttributeType.STRING
       }
     })
-
-    // Give Lambds FullAccess Role
-    this.donationsTable.grantFullAccess(this.insertDonationLambda);
   }
 
   createAPIGateway(): void {
