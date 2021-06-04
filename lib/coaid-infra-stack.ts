@@ -1,17 +1,29 @@
-import { Bucket, BucketEncryption } from '@aws-cdk/aws-s3';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
+import { BlockPublicAccess, Bucket, BucketEncryption } from '@aws-cdk/aws-s3'
+import * as lambda from '@aws-cdk/aws-lambda-nodejs'
+import { Runtime } from '@aws-cdk/aws-lambda';
+import * as dynamodb from '@aws-cdk/aws-dynamodb'
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from '@aws-cdk/core'
+
+import * as path from 'path'
 
 export class CoaidInfraStack extends cdk.Stack {
 
-  // Stack Resources
+  /**
+   * CoaidInfraStack Resource Properties
+   * --------------------------------------------
+   */
   bucket: Bucket 
-  insertDonationLambda: lambda.Function
-  getAllDonationsLambda: lambda.Function
+  insertDonationLambda: lambda.NodejsFunction
+  getAllDonationsLambda: lambda.NodejsFunction
   donationsTable: dynamodb.Table
 
+  /**
+   * CoaidInfraStack Properties
+   * @param scope 
+   * @param id 
+   * @param props 
+   */
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -30,9 +42,11 @@ export class CoaidInfraStack extends cdk.Stack {
 
   createS3Buckets(): void {
 
+    // Create new private s3 bucket...
     this.bucket = new Bucket(this, 'CoaidDonationHistoryBucket', {
       encryption: BucketEncryption.S3_MANAGED,
-      bucketName: 'coaid.donation.history-bucket'
+      bucketName: 'coaid.donation.history-bucket',
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL
     })
   
     new cdk.CfnOutput(this, 'BucketNameExport', {
@@ -43,16 +57,15 @@ export class CoaidInfraStack extends cdk.Stack {
 
   createLambdaFunctions(): void {
 
-    // Create a Lambda Function for inserting donations into DynamoDB Table
-    this.insertDonationLambda = new lambda.Function(this, 'insertDonationLambda',{
-      runtime: lambda.Runtime.NODEJS_14_X,
-      code: lambda.Code.fromAsset('./coaid_lambda/controllers'),
-      handler: 'handlers.insertDonationData',
-      // Pass the dynamoDB Table name to the environment variable
-      environment: {
-        DONATION_TABLE_NAME: this.donationsTable.tableName
-      }
-    })
+    this.insertDonationLambda = new lambda.NodejsFunction(this, 'insertDonationLambda',{
+        runtime: Runtime.NODEJS_14_X,
+        entry: path.join(__dirname, '..','coaid-lambda','controllers','handlers.ts'),
+        handler: 'insertDonationData',
+        // Pass the dynamoDB Table name to the environment variable
+        environment: {
+          DONATION_TABLE_NAME: this.donationsTable.tableName
+        }
+      })
 
     // Give Lambda FullAccess Role
     this.donationsTable.grantFullAccess(this.insertDonationLambda);

@@ -1,0 +1,198 @@
+Resources:
+  CoaidDonationHistoryBucket8D2E544D:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: coaid.donation.history-bucket
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidDonationHistoryBucket/Resource
+  DonationsTable5264C194:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: donation_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: donation_id
+          AttributeType: S
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: donations
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/DonationsTable/Resource
+  insertDonationLambdaServiceRoleB0FD0B6D:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/insertDonationLambda/ServiceRole/Resource
+  insertDonationLambdaServiceRoleDefaultPolicy6B9EBED6:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: dynamodb:*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - DonationsTable5264C194
+                  - Arn
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: insertDonationLambdaServiceRoleDefaultPolicy6B9EBED6
+      Roles:
+        - Ref: insertDonationLambdaServiceRoleB0FD0B6D
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/insertDonationLambda/ServiceRole/DefaultPolicy/Resource
+  insertDonationLambda4A002361:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3Bucket60BE6BDC
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3VersionKeyE3C24B61
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3VersionKeyE3C24B61
+      Role:
+        Fn::GetAtt:
+          - insertDonationLambdaServiceRoleB0FD0B6D
+          - Arn
+      Environment:
+        Variables:
+          DONATION_TABLE_NAME:
+            Ref: DonationsTable5264C194
+      Handler: handlers.insertDonationData
+      Runtime: nodejs14.x
+    DependsOn:
+      - insertDonationLambdaServiceRoleDefaultPolicy6B9EBED6
+      - insertDonationLambdaServiceRoleB0FD0B6D
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/insertDonationLambda/Resource
+      aws:asset:path: asset.43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5
+      aws:asset:property: Code
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAAEz2Q0W7CMAxFv4V311AB79uQeB3q+AE38VBok0xxMoSi/DtNqu3Jx7r29ZV77HcH3G3e6CGd0tM2Kx8Y81ckNcHJO4khqQinb/eZ4k+KMLD4FBTDuwjHZe5m3K3qFwpkOXKozf/UwouLNtF4V6BeybLH/JHUxM12pQL66ch6PWK+0ji3xQYFZrKjJszn5FS1qdIfFzBkMQ9+3Wj14mejni1SowKy76imFWyhSwHnNeNdtr/9Afvj8oC7GNOF5KKxjMNaX3JC7kAdAQAA
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Outputs:
+  BucketNameExport:
+    Value:
+      Ref: CoaidDonationHistoryBucket8D2E544D
+    Export:
+      Name: CoaidDonationHistoryBucketName
+Parameters:
+  AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3Bucket60BE6BDC:
+    Type: String
+    Description: S3 bucket for asset "43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5"
+  AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3VersionKeyE3C24B61:
+    Type: String
+    Description: S3 key for asset version "43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5"
+  AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5ArtifactHashD4182B9D:
+    Type: String
+    Description: Artifact hash for asset "43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5"
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+
