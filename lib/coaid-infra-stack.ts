@@ -59,7 +59,7 @@ export class CoaidInfraStack extends cdk.Stack {
 
     this.insertDonationLambda = new lambda.NodejsFunction(this, 'insertDonationLambda',{
         runtime: Runtime.NODEJS_14_X,
-        entry: path.join(__dirname, '..','coaid-lambda','controllers','handlers.ts'),
+        entry: path.join(__dirname, '..','coaid_lambda','controllers','handlers.ts'),
         handler: 'insertDonationData',
         // Pass the dynamoDB Table name to the environment variable
         environment: {
