@@ -7,6 +7,11 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
       BucketName: coaid.donation.history-bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Metadata:
@@ -51,6 +56,12 @@ Resources:
     Properties:
       PolicyDocument:
         Statement:
+          - Action: s3:*
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - CoaidDonationHistoryBucket8D2E544D
+                - Arn
           - Action: dynamodb:*
             Effect: Allow
             Resource:
@@ -69,7 +80,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3Bucket60BE6BDC
+          Ref: AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7S3Bucket3582A5BD
         S3Key:
           Fn::Join:
             - ""
@@ -77,12 +88,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3VersionKeyE3C24B61
+                      - Ref: AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7S3VersionKey6685A8C5
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3VersionKeyE3C24B61
+                      - Ref: AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7S3VersionKey6685A8C5
       Role:
         Fn::GetAtt:
           - insertDonationLambdaServiceRoleB0FD0B6D
@@ -91,19 +102,22 @@ Resources:
         Variables:
           DONATION_TABLE_NAME:
             Ref: DonationsTable5264C194
-      Handler: handlers.insertDonationData
+          DONATION_HISTORY_BUCKET_NAME:
+            Ref: CoaidDonationHistoryBucket8D2E544D
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+      Handler: index.insertDonationData
       Runtime: nodejs14.x
     DependsOn:
       - insertDonationLambdaServiceRoleDefaultPolicy6B9EBED6
       - insertDonationLambdaServiceRoleB0FD0B6D
     Metadata:
       aws:cdk:path: CoaidInfraStack/insertDonationLambda/Resource
-      aws:asset:path: asset.43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5
+      aws:asset:path: asset.72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7
       aws:asset:property: Code
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAAEz2Q0W7CMAxFv4V311AB79uQeB3q+AE38VBok0xxMoSi/DtNqu3Jx7r29ZV77HcH3G3e6CGd0tM2Kx8Y81ckNcHJO4khqQinb/eZ4k+KMLD4FBTDuwjHZe5m3K3qFwpkOXKozf/UwouLNtF4V6BeybLH/JHUxM12pQL66ch6PWK+0ji3xQYFZrKjJszn5FS1qdIfFzBkMQ9+3Wj14mejni1SowKy76imFWyhSwHnNeNdtr/9Afvj8oC7GNOF5KKxjMNaX3JC7kAdAQAA
+      Analytics: v2:deflate64:H4sIAAAAAAAAEz2QwW7DIBBEv6X39SZWknvTSD22kZMfWAONsA1ULDSKEP9ewGlPMytmH6Ptsd/ucfvySnfuhJw3STivMF0CiRlOznLwUQQ4fdnPGL5jgEGxi14oODKrUHI3bW/1/UyejArK1+E/VXyhSB20sxnqL4l3mN6imFXDri6DfFgyTo6YrjQubbGZDAuZUVJnnVQT40eT92hFRYImg2lw60LTs1u0eLRGzWXgXUe1LGPr/ARiSfxhcoaKx4k3P/0e+0M5ycRadz7aoI3CYdVfcL424S8BAAA=
     Metadata:
       aws:cdk:path: CoaidInfraStack/CDKMetadata/Default
     Condition: CDKMetadataAvailable
@@ -114,15 +128,15 @@ Outputs:
     Export:
       Name: CoaidDonationHistoryBucketName
 Parameters:
-  AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3Bucket60BE6BDC:
+  AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7S3Bucket3582A5BD:
     Type: String
-    Description: S3 bucket for asset "43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5"
-  AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5S3VersionKeyE3C24B61:
+    Description: S3 bucket for asset "72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7"
+  AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7S3VersionKey6685A8C5:
     Type: String
-    Description: S3 key for asset version "43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5"
-  AssetParameters43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5ArtifactHashD4182B9D:
+    Description: S3 key for asset version "72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7"
+  AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7ArtifactHashF895528A:
     Type: String
-    Description: Artifact hash for asset "43966755f1c4136069cd3debcbb01bffc224bc021bbb3f022ce57b9470f64bf5"
+    Description: Artifact hash for asset "72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7"
 Conditions:
   CDKMetadataAvailable:
     Fn::Or:
@@ -195,4 +209,3 @@ Conditions:
           - Fn::Equals:
               - Ref: AWS::Region
               - us-west-2
-
