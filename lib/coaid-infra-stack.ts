@@ -4,8 +4,10 @@ import { Runtime } from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb'
 
 import * as cdk from '@aws-cdk/core'
+import { BucketDeployment, Source } from '@aws-cdk/aws-s3-deployment'
 
 import * as path from 'path'
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 export class CoaidInfraStack extends cdk.Stack {
 
@@ -40,6 +42,9 @@ export class CoaidInfraStack extends cdk.Stack {
 
   }
 
+  /**
+   * Create s3 buckets
+   */
   createS3Buckets(): void {
 
     // Create new private s3 bucket...
@@ -49,12 +54,22 @@ export class CoaidInfraStack extends cdk.Stack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL
     })
   
+    // new BucketDeployment(this, 'HistoryBucketDisployment',{
+    //   sources: [
+    //     Source.asset(path.join(__dirname,'..','assets'))
+    //   ],
+    //   destinationBucket: this.bucket
+    // })
+
     new cdk.CfnOutput(this, 'BucketNameExport', {
       value: this.bucket.bucketName,
       exportName: 'CoaidDonationHistoryBucketName'
     })
   }
 
+  /**
+   * Create Lambda Functions
+   */
   createLambdaFunctions(): void {
 
     this.insertDonationLambda = new lambda.NodejsFunction(this, 'insertDonationLambda',{
@@ -63,9 +78,19 @@ export class CoaidInfraStack extends cdk.Stack {
         handler: 'insertDonationData',
         // Pass the dynamoDB Table name to the environment variable
         environment: {
-          DONATION_TABLE_NAME: this.donationsTable.tableName
+          DONATION_TABLE_NAME: this.donationsTable.tableName,
+          DONATION_HISTORY_BUCKET_NAME: this.bucket.bucketName
         }
       })
+
+    // Create Policy Statement and Add s3 Bucket for accessing
+    const bucketPermission = new PolicyStatement()
+                                
+    bucketPermission.addResources(this.bucket.bucketArn)
+    bucketPermission.addActions('s3:*')
+
+    // Assume Role for Lambda and Attack Bucket Access Policy
+    this.insertDonationLambda.addToRolePolicy(bucketPermission)
 
     // Give Lambda FullAccess Role
     this.donationsTable.grantFullAccess(this.insertDonationLambda);
