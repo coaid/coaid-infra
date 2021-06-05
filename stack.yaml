@@ -114,10 +114,118 @@ Resources:
       aws:cdk:path: CoaidInfraStack/insertDonationLambda/Resource
       aws:asset:path: asset.72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7
       aws:asset:property: Code
+  CoaidApiGatewayBDD70117:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+      Name: coaid-api
+      ProtocolType: HTTP
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/Resource
+  CoaidApiGatewayDefaultStage5F1C33FF:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId:
+        Ref: CoaidApiGatewayBDD70117
+      StageName: $default
+      AutoDeploy: true
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/DefaultStage/Resource
+  CoaidApiGatewayGETinsertdonationCoaidInfraStackCoaidApiGatewayGETinsertdonation184107D2PermissionB700BFBB:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - insertDonationLambda4A002361
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: CoaidApiGatewayBDD70117
+            - /*/*/insert-donation
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/GET--insert-donation/CoaidInfraStackCoaidApiGatewayGETinsertdonation184107D2-Permission
+  CoaidApiGatewayGETinsertdonationHttpIntegration9e9f109d4b90654b288fb7937f0d9991BB0ABEA7:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId:
+        Ref: CoaidApiGatewayBDD70117
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::GetAtt:
+          - insertDonationLambda4A002361
+          - Arn
+      PayloadFormatVersion: "2.0"
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/GET--insert-donation/HttpIntegration-9e9f109d4b90654b288fb7937f0d9991/Resource
+  CoaidApiGatewayGETinsertdonationA934A8BF:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId:
+        Ref: CoaidApiGatewayBDD70117
+      RouteKey: GET /insert-donation
+      AuthorizationType: NONE
+      Target:
+        Fn::Join:
+          - ""
+          - - integrations/
+            - Ref: CoaidApiGatewayGETinsertdonationHttpIntegration9e9f109d4b90654b288fb7937f0d9991BB0ABEA7
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/GET--insert-donation/Resource
+  CoaidApiGatewayPOSTinsertdonationCoaidInfraStackCoaidApiGatewayPOSTinsertdonationFFEEF3AFPermission4C1B7E15:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - insertDonationLambda4A002361
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: CoaidApiGatewayBDD70117
+            - /*/*/insert-donation
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/POST--insert-donation/CoaidInfraStackCoaidApiGatewayPOSTinsertdonationFFEEF3AF-Permission
+  CoaidApiGatewayPOSTinsertdonation2F026F7A:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId:
+        Ref: CoaidApiGatewayBDD70117
+      RouteKey: POST /insert-donation
+      AuthorizationType: NONE
+      Target:
+        Fn::Join:
+          - ""
+          - - integrations/
+            - Ref: CoaidApiGatewayGETinsertdonationHttpIntegration9e9f109d4b90654b288fb7937f0d9991BB0ABEA7
+    Metadata:
+      aws:cdk:path: CoaidInfraStack/CoaidApiGateway/POST--insert-donation/Resource
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAAEz2QwW7DIBBEv6X39SZWknvTSD22kZMfWAONsA1ULDSKEP9ewGlPMytmH6Ptsd/ucfvySnfuhJw3STivMF0CiRlOznLwUQQ4fdnPGL5jgEGxi14oODKrUHI3bW/1/UyejArK1+E/VXyhSB20sxnqL4l3mN6imFXDri6DfFgyTo6YrjQubbGZDAuZUVJnnVQT40eT92hFRYImg2lw60LTs1u0eLRGzWXgXUe1LGPr/ARiSfxhcoaKx4k3P/0e+0M5ycRadz7aoI3CYdVfcL424S8BAAA=
+      Analytics: v2:deflate64:H4sIAAAAAAAAE11RwU7DMAz9Fu6pt7JxZ0ya4AJT4Qe8NFRpm6SKnU1VlH+nSWEHTu/ZeX5+Vmqot3vYPjzjjSrZDpsonVcQPxnlII7OEvsgWRy/7UfgKbBoFLngpRIHIsWLrtO2y+9n9GgUK5+Lu2rhi0urWTubRN4SaQfxJchBFduVJdHOFo1rLxC/8DKWwUKSGNFcWqysa1VP8F7gFKzMlkKjgdi4daDg2Y1aziVRYUnQrsIclqBk/jWEuEjuPlmuvNFEa9BJd8jqhvP1EeIr83SYdBZlyGU+vOxcSW41LvDK3iyrzuOf8b+y6FJKIl8EPW2u9R7qp+UXetK68sGyNgqaFX8ASQ6xaqIBAAA=
     Metadata:
       aws:cdk:path: CoaidInfraStack/CDKMetadata/Default
     Condition: CDKMetadataAvailable
@@ -127,6 +235,19 @@ Outputs:
       Ref: CoaidDonationHistoryBucket8D2E544D
     Export:
       Name: CoaidDonationHistoryBucketName
+  InsertDonationAPI:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: CoaidApiGatewayBDD70117
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+    Export:
+      Name: InsertDonationAPIName
 Parameters:
   AssetParameters72d2504449e06992eca1b537c17ecd008a2c6f0af2d7c6741901083ad1f334d7S3Bucket3582A5BD:
     Type: String
@@ -209,3 +330,4 @@ Conditions:
           - Fn::Equals:
               - Ref: AWS::Region
               - us-west-2
+

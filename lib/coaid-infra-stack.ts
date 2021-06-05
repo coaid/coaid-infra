@@ -8,6 +8,9 @@ import { BucketDeployment, Source } from '@aws-cdk/aws-s3-deployment'
 
 import * as path from 'path'
 import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { CorsHttpMethod, HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
+import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
+import { CfnOutput } from '@aws-cdk/core';
 
 export class CoaidInfraStack extends cdk.Stack {
 
@@ -39,6 +42,9 @@ export class CoaidInfraStack extends cdk.Stack {
     
     // Create Lambda Functions
     this.createLambdaFunctions()
+
+    // Create API Gateway
+    this.createAPIGateway()
 
   }
 
@@ -83,6 +89,15 @@ export class CoaidInfraStack extends cdk.Stack {
         }
       })
 
+    // Attach Permissions to Lambdas
+    this.attachPermissionsToLambda()
+
+  }
+
+  /**
+   * Method to Attach permissions to Lambdas
+   */
+  attachPermissionsToLambda(): void {
     // Create Policy Statement and Add s3 Bucket for accessing
     const bucketPermission = new PolicyStatement()
                                 
@@ -94,9 +109,11 @@ export class CoaidInfraStack extends cdk.Stack {
 
     // Give Lambda FullAccess Role
     this.donationsTable.grantFullAccess(this.insertDonationLambda);
-
   }
 
+  /**
+   * Method to create DynamoDB Tables
+   */
   createDynamoDBTables(): void {
     this.donationsTable = new dynamodb.Table(this, 'DonationsTable', {
       tableName: 'donations',
@@ -109,7 +126,38 @@ export class CoaidInfraStack extends cdk.Stack {
     })
   }
 
+  /**
+   * Method to create API Gateway
+   */
   createAPIGateway(): void {
+    const httpApi = new HttpApi(this, 'CoaidApiGateway',{
+      corsPreflight: {
+        allowOrigins: ['*'],
+        allowMethods: [ CorsHttpMethod.ANY ]
+      },
+      apiName: 'coaid-api',
+      createDefaultStage: true
+    })
 
+    // Create API Integration with Lambda
+    const lambdaIntegration = new LambdaProxyIntegration({
+      handler: this.insertDonationLambda
+    })
+
+    // Add Routes
+    httpApi.addRoutes({
+      path: '/insert-donation',
+      methods: [
+        HttpMethod.GET,
+        HttpMethod.POST
+      ],
+      integration: lambdaIntegration
+    })
+
+    // Output API URL
+    new CfnOutput(this, 'InsertDonationAPI',{
+      value: httpApi.url!,
+      exportName: 'InsertDonationAPIName'
+    })
   }
 }
