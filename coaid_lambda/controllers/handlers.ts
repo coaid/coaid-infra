@@ -21,10 +21,44 @@ exports.insertDonationData = async (
     event: APIGatewayProxyEventV2, context: Context
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            "message": "Hello From Lambda"
-        })
+    // TODO: Clean code and move to service layer and model layer
+    // Log the event
+    console.log(event)
+
+    // Parse the body
+    const body = JSON.parse(event.body!)
+
+    // Insert into DynamoDB Table
+    try {
+        const insertToDDB = await dynamoDB.putItem({
+            TableName: donationTableName!,
+            Item: {
+                donation_id: {
+                    S: body.donation_id
+                },
+                name: {
+                    S: body.name
+                },
+                amount: {
+                    S: body.amount
+                }
+            }
+        }).promise()
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                "message": insertToDDB
+            })
+        }
+
+        
+    } catch(e) {
+
+        console.log(e.message);
+        return {
+            statusCode: 500,
+            body: e.message
+        }
     }
 }
